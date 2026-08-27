@@ -77,14 +77,21 @@ export async function uploadResumable(
   throw new Error("Upload finished without a response from YouTube.");
 }
 
-async function queryOffset(uploadUrl: string, total: number) {
-  const res = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Range": `bytes */${total}` },
-  });
-  if (res.status === 308) {
-    const range = res.headers.get("Range");
-    return range ? Number(range.split("-")[1]) + 1 : 0;
+async function queryOffset(uploadUrl: string, total: number): Promise<number | null> {
+  try {
+    const res = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Range": `bytes */${total}` },
+    });
+    if (res.status === 308) {
+      const range = res.headers.get("Range");
+      return range ? Number(range.split("-")[1]) + 1 : 0;
+    }
+    return 0;
+  } catch {
+    // Probe failed (network hiccup) — signal "offset unknown" so the caller
+    // keeps retrying from the last known offset instead of failing hard.
+    return null;
   }
-  return 0;
 }
+
