@@ -36,11 +36,14 @@ export async function uploadResumable(
     } catch (e) {
       attempts += 1;
       if (attempts > 5) throw e instanceof Error ? e : new Error("Network error during upload.");
-      const resumed = await queryOffset(uploadUrl, total);
-      offset = resumed;
+      // A failed offset probe is itself recoverable — keep retrying from the
+      // last known offset instead of turning a hiccup into a fatal error.
+      const resumed = await queryOffset(uploadUrl, total).catch(() => null);
+      if (resumed !== null) offset = resumed;
       await new Promise((r) => setTimeout(r, 1500 * attempts));
       continue;
     }
+
 
     if (res.status === 308) {
       const range = res.headers.get("Range");
