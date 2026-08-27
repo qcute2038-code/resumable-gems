@@ -63,10 +63,12 @@ export async function uploadResumable(
     if (res.status >= 500) {
       attempts += 1;
       if (attempts > 5) throw new Error(`YouTube upload failed (${res.status}).`);
-      offset = await queryOffset(uploadUrl, total);
+      const resumed = await queryOffset(uploadUrl, total).catch(() => null);
+      if (resumed !== null) offset = resumed;
       await new Promise((r) => setTimeout(r, 1500 * attempts));
       continue;
     }
+
 
     const text = await res.text().catch(() => "");
     throw new Error(`YouTube rejected the upload (${res.status}). ${text.slice(0, 200)}`);
