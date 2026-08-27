@@ -185,8 +185,10 @@ function Home() {
           jobId: plan.job.id,
           fileSize: videoFile.size,
           mimeType: videoFile.type || "video/mp4",
+          origin: window.location.origin,
         },
       });
+
       abortRef.current = new AbortController();
       const videoId = await uploadResumable(
         uploadUrl,
