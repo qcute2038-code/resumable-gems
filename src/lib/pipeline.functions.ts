@@ -10,6 +10,7 @@ import {
   runResearch,
   signThumbnail,
   startResumableUpload,
+  storeUserThumbnail,
   verifyPublish,
   purgeExpiredArtifacts,
 } from "./pipeline.server";
