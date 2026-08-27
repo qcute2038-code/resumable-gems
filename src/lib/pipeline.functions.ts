@@ -95,6 +95,22 @@ export const createThumbnail = createServerFn({ method: "POST" })
     return { url: await signThumbnail(path) };
   });
 
+export const uploadThumbnail = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        jobId: z.string(),
+        base64: z.string().min(1),
+        contentType: z.string().default("image/jpeg"),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    const path = await storeUserThumbnail(data.jobId, data.base64, data.contentType);
+    await saveThumbnailPath(data.jobId, path, "user upload");
+    return { url: await signThumbnail(path) };
+  });
+
 export const getJob = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ jobId: z.string() }).parse(data))
   .handler(async ({ data }) => loadJob(data.jobId));
