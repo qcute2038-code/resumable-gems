@@ -378,6 +378,21 @@ ${textBlock}`;
   return path;
 }
 
+export async function storeUserThumbnail(
+  jobId: string,
+  base64: string,
+  contentType: string,
+) {
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
+  const path = `${jobId}/${Date.now()}-upload.${ext}`;
+  const { error } = await supabaseAdmin.storage
+    .from("thumbnails")
+    .upload(path, bytes, { contentType, upsert: true });
+  if (error) throw new Error(error.message);
+  return path;
+}
+
 export async function signThumbnail(path: string | null) {
   if (!path) return null;
   const { data } = await supabaseAdmin.storage.from("thumbnails").createSignedUrl(path, 60 * 60);

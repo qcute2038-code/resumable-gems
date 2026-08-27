@@ -10,6 +10,7 @@ import {
   runResearch,
   signThumbnail,
   startResumableUpload,
+  storeUserThumbnail,
   verifyPublish,
   purgeExpiredArtifacts,
 } from "./pipeline.server";
@@ -91,6 +92,22 @@ export const createThumbnail = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const path = await makeThumbnail(data.jobId, data.prompt, data.plan ?? null);
     await saveThumbnailPath(data.jobId, path, data.prompt);
+    return { url: await signThumbnail(path) };
+  });
+
+export const uploadThumbnail = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        jobId: z.string(),
+        base64: z.string().min(1),
+        contentType: z.string().default("image/jpeg"),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    const path = await storeUserThumbnail(data.jobId, data.base64, data.contentType);
+    await saveThumbnailPath(data.jobId, path, "user upload");
     return { url: await signThumbnail(path) };
   });
 
